@@ -1,0 +1,6 @@
+*.swo
+*.swp
+# just some vim recovery files
+# and some executables and object files
+*.o
+
