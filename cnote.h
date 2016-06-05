@@ -1,3 +1,4 @@
+#include <memory>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -72,4 +73,19 @@ private:
     boost::program_options::variables_map vm;
 };
 
+class cnote_creator {
+public:
+    cnote_creator() = default;
+    cnote_creator(const cnote_creator &) = default;
+    cnote_creator &operator=(const cnote_creator &) = default;
+    ~cnote_creator() = default;
+    
+    bool create_options(const boost::program_options::variables_map &vm);
+
+    bool parse_note_file(std::istream &is, std::shared_ptr<cnote> &p); 
+    std::shared_ptr<cnote> create_note(std::istream &is);
+    std::shared_ptr<cnote> create_node(std::string &str); 
+private:
+    boost::program_options::variables_map vm;
+};
 
