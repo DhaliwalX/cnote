@@ -5,10 +5,13 @@
 #include <vector>
 #include <boost/program_options.hpp>
 #include <sstream>
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 typedef unsigned int cnote_flag__;
 
-enum class cnote_flag : cnote_flag__ {
+enum cnote_flag : cnote_flag__ {
     Normal = 0,
     Important = 1,
     Todo = 2,
@@ -19,7 +22,7 @@ enum class cnote_flag : cnote_flag__ {
 class cnote {
 public:
     cnote(const std::string &note, const std::string &title,
-            const std::string &author, const cnote_flag &flag,
+            const std::string &author, const cnote_flag__ &flags,
             const std::vector<std::string> &tags);
     cnote();
 
@@ -33,13 +36,13 @@ public:
     bool has_tag(const std::string &tag) const;
     bool has_flag(const cnote_flag &flag) const;
     void mark_flag(const cnote_flag &flag);
-    void mark_tag(const std::string &tag;
+    void mark_tag(const std::string &tag);
 private:
-    cnote_flag flags;
-    std::vector<std::string> tags;
-    std::string note;
-    std::string title;
-    std::string author;
+    cnote_flag__ m_flags;
+    std::vector<std::string> m_tags;
+    std::string m_note;
+    std::string m_title;
+    std::string m_author;
 };
 
 // every cnote will be stored in the json format
@@ -66,7 +69,7 @@ public:
     bool parse(std::istringstream &stream);
 
     // print the output of the parser to the output stream
-    void dump(std::ofstream &os) const;
+    void dump(std::ostream &os) const;
 private:
     json json_parser;
     std::vector<cnote> note_store;
