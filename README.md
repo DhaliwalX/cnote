@@ -6,8 +6,8 @@ editor (Just define $EDITOR environment variable).
 Simple ;). Use `cmake` to build the project.
 
 ## Start taking note
-CAUTION: Currently only one note can be stored in ~/cnote.temp. I am currently working on this project. So wait till all the features
-are added.
+To create a note, type `./cnote Notes.txt` or any other file. Note will
+be created and saved in Notes.txt.
 
 ## TODO
 
