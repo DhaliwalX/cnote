@@ -7,7 +7,7 @@ markdown_parser::markdown_parser()
 std::vector<std::string> markdown_parser::parse_tags()
 {
     // a bit scary! 
-    std::regex tag_r { R"(((\*(.*?)\*)|(\*\*(.*?)\*\*)|(__(.*?)__)))" };
+    std::regex tag_r { R"(((\*\*(.*?)\*\*)|(\*(.*?)\*)|(__(.*?)__)))" };
     std::vector<std::string> ret;
 
     auto start = std::sregex_iterator(cache.begin(), cache.end(), tag_r);
@@ -16,7 +16,7 @@ std::vector<std::string> markdown_parser::parse_tags()
     if (std::distance(start, end) == 0)
         return {};
     for (auto it = start; it != end; it++) {
-        ret.push_back((*start).str());
+        ret.push_back((*it).str());
     }
 
     return ret;
@@ -34,7 +34,7 @@ std::vector<cnote_list> markdown_parser::parse_list()
         return {};
     for (auto it = start; it != end; it++)
     {
-        ret.push_back((*start).str());
+        ret.push_back((*it).str());
     }
 
     return ret;
