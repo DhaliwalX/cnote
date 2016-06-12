@@ -55,6 +55,7 @@ bool cnote_parser::set_parse_options(
         const boost::program_options::variables_map &v)
 {
     vm = v;
+    return true;
 }
 
 bool cnote_parser::parse(std::istringstream &is)
@@ -65,6 +66,47 @@ bool cnote_parser::parse(std::istringstream &is)
     if (json_parser.is_array())
         return true;
     return false;
+}
+
+std::string get_flag_string(cnote_flag flag, int i)
+{
+    switch (flag & static_cast<cnote_flag>(i)) {
+    case cnote_flag::Normal:
+        return "Normal";
+    case cnote_flag::Important:
+        return "Important";
+    case cnote_flag::Todo:
+        return "Todo";
+    case cnote_flag::Log:
+        return "Log";
+    case cnote_flag::Event:
+        return "Event";
+
+    default:
+        throw cnote_bad_flag_exception();
+    }
+}
+
+std::ostream &operator<<(std::ostream &os, cnote &cn)
+{
+    os << "{\n\t";
+    os << "'title': '" << cn.title() << "'\n\t";
+    os << "'note': '" << cn.note() << "'\n\t";
+    os << "'author': '" << cn.author() << "'\n\t";
+    os << "'tags': " << "[ ";
+    for (const auto &tag : cn.m_tags) {
+        os << "'" << tag << "', ";
+    }
+    os << " ]\n\t";
+    os << "'flags': [ ";
+    for (auto i = 1; i != 32; i <<= 1) {
+        if (cn.has_flag(static_cast<cnote_flag>(i))) {
+            os << "'" <<
+                get_flag_string(static_cast<cnote_flag>(cn.m_flags), i) << "', ";
+        }
+    }
+    os << "]\n}";
+    return os;
 }
 
 void cnote_parser::dump(std::ostream &os) const
@@ -82,21 +124,15 @@ std::string get_temp_file_path()
 
 bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
 {
-    std::string line;
+    std::string note;
     std::regex r(TITLE_REGEX);
-    int line_count = 0;
+    char buffer[1024];
 
-    while (getline(is, line)) {
-        if (!line_count && line.empty())
-            continue;
-        if (!line_count && std::regex_match(line, r)) {
-            std::cout << "We got the title: " << line << std::endl;
-            p->title() = line;
-        } else {
-            std::cout << line << std::endl;
-            p->note() += line;
-        }
+    while (is) {
+        is.read(buffer, 1024);
+        note += buffer;
     }
+    std::cout << note << std::endl;
     return true;
 }
 
@@ -117,9 +153,16 @@ std::shared_ptr<cnote> cnote_creator::create_note(std::istream &i)
     //          + Item 1
     //          + Item 2
     //
-
-    // yup, it's a system() function call
-    system((std::string("vim ") + get_temp_file_path()).c_str());
+    // get the user's favourite editor, if not specified then default will
+    // be mine's favourite that's `vim`.
+    char *editor = getenv("EDITOR");
+    std::string e = "";
+    if (!editor) {
+        e = "vim";
+    } else {
+        e = editor;
+    }
+    system((e + " " + get_temp_file_path()).c_str());
     std::ifstream is(get_temp_file_path());
     std::shared_ptr<cnote> note_ptr = std::make_shared<cnote>();
 
@@ -128,7 +171,7 @@ std::shared_ptr<cnote> cnote_creator::create_note(std::istream &i)
     } else {
         std::cerr << "error: can't open " << get_temp_file_path() << std::endl;
     }
-
+    is.close();
     return note_ptr;
 }
 
