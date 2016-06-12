@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <string>
-
+#include "cnote.h"
 namespace opt = boost::program_options;
 
 // this will return default filename for the notes file where all the notes
@@ -65,6 +65,11 @@ int main(int argc, char *argv[])
         else if (auto v = boost::any_cast<std::string>(&value))
             std::cout << *v << std::endl;
     }
+    
+    cnote_creator cc;
+
+    cc.create_note(std::cin);
+    
     return 0;
 }
 
