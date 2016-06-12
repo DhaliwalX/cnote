@@ -1,53 +1,54 @@
 #include "cnote.h"
+#include <string>
 #include <regex>
 
 cnote::cnote(const std::string &note, const std::string &title,
-        const std::string &author, const cnote_flag &flag,
+        const std::string &author, const cnote_flag__ &flags,
         const std::vector<std::string> &tags) :
-    note(note), title(title), author(author), flags(flag), tags(tags)
+    m_note(note), m_title(title), m_author(author), m_flags(flags), m_tags(tags)
 { }
 
 cnote::cnote() :
-    flags(cnote_flag::Normal)
+    m_flags(cnote_flag::Normal)
 { }
 
 std::string &cnote::note()
 {
-    return this->note;
+    return this->m_note;
 }
 
 std::string &cnote::title()
 {
-    return this->title;
+    return this->m_title;
 }
 
 std::string &cnote::author()
 {
-    return this->author;
+    return this->m_author;
 }
 
-bool has_tag(const std::string &tag) const
+bool cnote::has_tag(const std::string &tag) const
 {
-    for (const auto &t : this->tags) {
+    for (const auto &t : this->m_tags) {
         if (t == tag)
             return true;
     }
     return false;
 }
 
-bool has_flag(const cnote_flag & flag) const
+bool cnote::has_flag(const cnote_flag & flag) const
 {
-    return flag & this->flags;
+    return flag & this->m_flags;
 }
 
-void mark_flag(const cnote_flag &flag)
+void cnote::mark_flag(const cnote_flag &flag)
 {
-    this->flags |= flag;
+    this->m_flags |= (flag);
 }
 
-void mark_tag(const std::string &tag)
+void cnote::mark_tag(const std::string &tag)
 {
-    this->tags.push_back(tag);
+    this->m_tags.push_back(tag);
 }
 
 bool cnote_parser::set_parse_options(
@@ -56,7 +57,7 @@ bool cnote_parser::set_parse_options(
     vm = v;
 }
 
-bool parse(std::istringstream &is)
+bool cnote_parser::parse(std::istringstream &is)
 {
     is >> json_parser;
 
@@ -66,7 +67,7 @@ bool parse(std::istringstream &is)
     return false;
 }
 
-void dump(std::ostream &os) const
+void cnote_parser::dump(std::ostream &os) const
 {
     os << json_parser.dump(2) << std::endl;
 }
@@ -76,7 +77,7 @@ void dump(std::ostream &os) const
 
 std::string get_temp_file_path()
 {
-    return "/home/"s + getenv("USER") + TEMP_FILE_NAME;
+    return std::string("/home/") + getenv("USER") + "/" +  TEMP_FILE_NAME;
 }
 
 bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
@@ -88,7 +89,7 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
     while (getline(is, line)) {
         if (!line_count && line.empty())
             continue;
-        if (!line_count && r.match(line)) {
+        if (!line_count && std::regex_match(line, r)) {
             std::cout << "We got the title: " << line << std::endl;
             p->title() = line;
         } else {
@@ -99,7 +100,7 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
     return true;
 }
 
-std::shared_ptr<cnote> cnote_creator::create_note(std::istream &is)
+std::shared_ptr<cnote> cnote_creator::create_note(std::istream &i)
 {
     // so let's see how would I take the input
     // I'll just open their favorite text editor like vim or emacs to write their note
