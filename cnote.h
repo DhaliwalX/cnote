@@ -12,11 +12,27 @@ using json = nlohmann::json;
 typedef unsigned int cnote_flag__;
 
 enum cnote_flag : cnote_flag__ {
-    Normal = 0,
-    Important = 1,
-    Todo = 2,
-    Log = 4,
-    Event = 8
+    Normal = 1,
+    Important = 2,
+    Todo = 4,
+    Log = 8,
+    Event = 16
+};
+
+class cnote_exception : public std::exception {
+public:
+    const char *what() const noexcept override
+    {
+        return "Unknown cnote_exception thrown";
+    }
+};
+
+class cnote_bad_flag_exception : public cnote_exception {
+public:
+    const char *what() const noexcept override 
+    {
+        return "Bad flag for note";
+    }
 };
 
 class cnote {
@@ -26,6 +42,7 @@ public:
             const std::vector<std::string> &tags);
     cnote();
 
+    friend std::ostream &operator<<(std::ostream &os, cnote &cn);
     cnote(const cnote &) = default;
     cnote& operator=(const cnote &) = default;
     ~cnote() = default;
