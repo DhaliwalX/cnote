@@ -24,6 +24,16 @@ std::string default_notes_filename()
     return ret +"/home/" + user + "/.cnote";
 }
 
+std::string get_user_name()
+{
+    char *user = std::getenv("USER");   // we're working on linux
+    if (!user) {
+        return "unnamed";
+    } else {
+        return user;
+    }
+}
+
 // sets command line options
 void set_options(opt::options_description &desc,
 	opt::positional_options_description &po)
@@ -33,22 +43,37 @@ void set_options(opt::options_description &desc,
             opt::value<std::string>()->default_value(default_notes_filename()),
             "path of the notes file")
 	("help,h", "show help message and exit")
-        ("author,a", "author of the note")
-        ("flags,f", "");
-    po.add("title,t", -1);
+        ("author,a", opt::value<std::string>()->default_value(get_user_name()),
+                "author of the note")
+        ("flags,f", opt::value<cnote_flag__>()->default_value(cnote_flag::Normal),
+                "flags for the note");
+    po.add("notes-file", -1);
 }
 
-void parse_command_line_options(opt::options_description &desc,
+bool parse_command_line_options(opt::options_description &desc,
     opt::positional_options_description &po, 
     int argc, char *argv[], opt::variables_map &vm)
 {
     try {
         opt::store(opt::command_line_parser(argc, argv).options(desc)
             .positional(po).run(), vm);
-        opt::notify(vm);
     } catch (std::exception &e) {
         std::cerr << e.what() << std::endl;
+        return false;
     }
+    opt::notify(vm);
+    return true;
+}
+
+void parse_cnote_options(opt::variables_map &vm)
+{
+    if (vm.count("notes-file")) {
+        opts.notes_file_ = vm["notes-file"].as<std::string>();
+    } else {
+        opts.notes_file_ = "cnotes.txt";
+    }
+    opts.author_ = vm["author"].as<std::string>();
+    opts.flags_ = vm["flags"].as<cnote_flag__>();
 }
 
 int main(int argc, char *argv[])
@@ -58,19 +83,18 @@ int main(int argc, char *argv[])
     opt::variables_map vm;
 
     set_options(desc, po);
-    parse_command_line_options(desc, po, argc, argv, vm);
-    for (const auto it : vm) {
-        std::cout << it.first << ": ";
-        auto &value = it.second.value();
-
-        if (auto v = boost::any_cast<uint32_t>(&value))
-            std::cout << *v << std::endl;
-        else if (auto v = boost::any_cast<std::string>(&value))
-            std::cout << *v << std::endl;
+    if (!parse_command_line_options(desc, po, argc, argv, vm)) {
+        std::cout << "See -h for usage." << std::endl;
+        return -1;
     }
     
-    cnote_creator cc;
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
+    }
 
+    parse_cnote_options(vm);
+    cnote_creator cc;
     cc.create_note(std::cin);
     
     return 0;

@@ -2,6 +2,7 @@
 #include <string>
 #include <regex>
 
+cnote_options opts;
 cnote::cnote(const std::string &note, const std::string &title,
         const std::string &author, const cnote_flag__ &flags,
         const std::vector<std::string> &tags) :
@@ -105,14 +106,14 @@ std::string get_flag_string(cnote_flag flag, int i)
 std::ostream &operator<<(std::ostream &os, cnote &cn)
 {
     os << "{\n\t";
-    os << "'title': '" << cn.title() << "'\n\t";
-    os << "'note': '" << cn.note() << "'\n\t";
-    os << "'author': '" << cn.author() << "'\n\t";
+    os << "'title': '" << cn.title() << "',\n\t";
+    os << "'note': '" << cn.note() << "',\n\t";
+    os << "'author': '" << cn.author() << "',\n\t";
     os << "'tags': " << "[ ";
     for (const auto &tag : cn.m_tags) {
         os << "'" << tag << "', ";
     }
-    os << " ]\n\t";
+    os << " ],\n\t";
     os << "'flags': [ ";
     for (auto i = 1; i != 32; i <<= 1) {
         if (cn.has_flag(static_cast<cnote_flag>(i))) {
@@ -129,18 +130,9 @@ void cnote_parser::dump(std::ostream &os) const
     os << json_parser.dump(2) << std::endl;
 }
 
-#define TEMP_FILE_NAME "cnote.temp"
-#define TITLE_REGEX "[ ]*#+.*"
-
-std::string get_temp_file_path()
-{
-    return std::string("/home/") + getenv("USER") + "/" +  TEMP_FILE_NAME;
-}
-
 bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
 {
     std::string note;
-    std::regex r(TITLE_REGEX);
     char buffer[1024];
     markdown_parser parser;
 
@@ -173,7 +165,8 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
 std::shared_ptr<cnote> cnote_creator::create_note(std::istream &i)
 {
     // so let's see how would I take the input
-    // I'll just open their favorite text editor like vim or emacs to write their note
+    // I'll just open their favorite text editor like vim or emacs to write
+    // their note
     // in any way
     // But I should give them some format for making notes
     // so here is the format
@@ -196,14 +189,14 @@ std::shared_ptr<cnote> cnote_creator::create_note(std::istream &i)
     } else {
         e = editor;
     }
-    system((e + " " + get_temp_file_path()).c_str());
-    std::ifstream is(get_temp_file_path());
+    system((e + " " + opts.notes_file_).c_str());
+    std::ifstream is(opts.notes_file_);
     std::shared_ptr<cnote> note_ptr = std::make_shared<cnote>();
 
     if (is) {
         parse_note_file(is, note_ptr);
     } else {
-        std::cerr << "error: can't open " << get_temp_file_path() << std::endl;
+        std::cerr << "error: can't open " << opts.notes_file_ << std::endl;
     }
     is.close();
     return note_ptr;

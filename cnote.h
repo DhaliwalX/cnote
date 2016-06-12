@@ -30,6 +30,8 @@ struct cnote_options {
     bool debug_;
 };
 
+extern cnote_options opts;
+
 class cnote_exception : public std::exception {
 public:
     const char *what() const noexcept override
