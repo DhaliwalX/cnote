@@ -9,6 +9,9 @@ std::vector<std::string> markdown_parser::parse_tags()
     // a bit scary! 
     std::regex tag_r { R"(((\*\*(.*?)\*\*)|(\*(.*?)\*)|(__(.*?)__)))" };
     std::vector<std::string> ret;
+    std::string tag;
+    std::regex tag_e { R"([a-zA-Z0-9]*)" };     // yup, you are right tags
+                                                // tags should be a valid name
 
     auto start = std::sregex_iterator(cache.begin(), cache.end(), tag_r);
     auto end = std::sregex_iterator();
@@ -16,7 +19,8 @@ std::vector<std::string> markdown_parser::parse_tags()
     if (std::distance(start, end) == 0)
         return {};
     for (auto it = start; it != end; it++) {
-        ret.push_back((*it).str());
+        tag = (*it).str();
+        ret.push_back(tag);
     }
 
     return ret;
