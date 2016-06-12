@@ -32,12 +32,15 @@ void set_options(opt::options_description &desc,
         ("notes-file,n",
             opt::value<std::string>()->default_value(default_notes_filename()),
             "path of the notes file")
-	("help,h", "show help message and exit");
+	("help,h", "show help message and exit")
+        ("author,a", "author of the note")
+        ("flags,f", "");
     po.add("title,t", -1);
 }
 
 void parse_command_line_options(opt::options_description &desc,
-    opt::positional_options_description &po, int argc, char *argv[], opt::variables_map &vm)
+    opt::positional_options_description &po, 
+    int argc, char *argv[], opt::variables_map &vm)
 {
     try {
         opt::store(opt::command_line_parser(argc, argv).options(desc)
