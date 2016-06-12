@@ -14,7 +14,7 @@ are added.
 - [x] Project started
 - [x] Start taking note
 - [x] Save atleast one note
-- []  Save notes in the json format.
+- [ ]  Save notes in the json format.
 
 This list is still incomplete! Help me in completing it.
 
