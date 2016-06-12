@@ -10,6 +10,7 @@
 
 using json = nlohmann::json;
 
+
 typedef unsigned int cnote_flag__;
 
 enum cnote_flag : cnote_flag__ {
@@ -18,6 +19,15 @@ enum cnote_flag : cnote_flag__ {
     Todo = 4,
     Log = 8,
     Event = 16
+};
+
+// options passed from the command line
+struct cnote_options {
+    cnote_flag__ flags_;
+    std::string author_;
+    std::string title_;
+    std::string notes_file_;
+    bool debug_;
 };
 
 class cnote_exception : public std::exception {
@@ -55,6 +65,7 @@ public:
     bool has_flag(const cnote_flag &flag) const;
     void mark_flag(const cnote_flag &flag);
     void mark_tag(const std::string &tag);
+    std::string to_json() const;
 private:
     cnote_flag__ m_flags;
     std::vector<std::string> m_tags;

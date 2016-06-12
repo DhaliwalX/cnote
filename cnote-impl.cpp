@@ -51,6 +51,21 @@ void cnote::mark_tag(const std::string &tag)
     this->m_tags.push_back(tag);
 }
 
+std::string cnote::to_json() const 
+{
+    json j = {};
+
+    j["title"] = this->m_title;
+    j["author"] = this->m_author;
+    j["note"] = this->m_note;
+    j["tags"] = this->m_tags;
+    j["flags"] = this->m_flags;
+
+    std::cout << j.dump(4);
+
+    return j.dump();
+}
+
 bool cnote_parser::set_parse_options(
         const boost::program_options::variables_map &v)
 {
@@ -151,7 +166,7 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
         p->mark_tag(i);
     }
 
-    std::cout << *p << std::endl;
+    std::cout << (*p).to_json() << std::endl;
     return true;
 }
 
