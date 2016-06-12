@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 #include <sstream>
 #include "json.hpp"
+#include "markdown.h"
 
 using json = nlohmann::json;
 

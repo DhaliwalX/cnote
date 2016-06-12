@@ -5,7 +5,7 @@
 cnote::cnote(const std::string &note, const std::string &title,
         const std::string &author, const cnote_flag__ &flags,
         const std::vector<std::string> &tags) :
-    m_note(note), m_title(title), m_author(author), m_flags(flags), m_tags(tags)
+    m_flags(flags),  m_tags(tags), m_note(note), m_title(title), m_author(author)
 { }
 
 cnote::cnote() :
@@ -127,12 +127,31 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
     std::string note;
     std::regex r(TITLE_REGEX);
     char buffer[1024];
+    markdown_parser parser;
 
+    // read the whole file
     while (is) {
         is.read(buffer, 1024);
         note += buffer;
     }
     std::cout << note << std::endl;
+    parser.set_cache(note);
+
+    std::string title = parser.parse_title();
+    while (!title.length()) {
+        std::cout << "Please specify a title: ";
+        std::getline(std::cin, title);
+    }
+
+    p->title() = title;
+    p->note() = note;
+    p->author() = getenv("USER");
+    std::vector<std::string> tags = parser.parse_tags();
+    for (const auto &i : tags) {
+        p->mark_tag(i);
+    }
+
+    std::cout << *p << std::endl;
     return true;
 }
 
