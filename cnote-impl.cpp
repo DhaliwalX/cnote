@@ -1,4 +1,7 @@
 #include "cnote.h"
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <string>
 #include <regex>
 
@@ -159,6 +162,52 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
     }
 
     std::cout << (*p).to_json() << std::endl;
+    return true;
+}
+
+
+class arguments {
+public:
+    arguments() :
+        argv{ } 
+    { }
+
+    void push_back(const char *arg)
+    {
+        char *temp = new char[strlen(arg)];
+        std::strcpy(temp, arg);
+        argv.push_back(temp);
+    }
+
+    char **data()
+    {
+        return argv.data();
+    }
+
+private:
+    std::vector<char*> argv;
+};
+
+bool launch_editor(const char *editor, const char *filename)
+{
+    pid_t child_pid;
+    int editor_status = 0;
+    child_pid = fork();
+    arguments args;
+    args.push_back(editor);
+    args.push_back(filename);
+
+    char **arg_list = args.data(); 
+    if (child_pid != 0)
+        return child_pid;
+    else {
+        execvp(editor, arg_list);
+        wait(&editor_status);
+        if (!WIFEXITED(editor_status)) {
+            std::cout << editor << " exited abnormally, aborting." << std::endl;
+            return false;
+        }
+    }
     return true;
 }
 
