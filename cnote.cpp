@@ -76,6 +76,32 @@ void parse_cnote_options(opt::variables_map &vm)
     opts.flags_ = vm["flags"].as<cnote_flag__>();
 }
 
+bool parse_note_database(cnote_parser &parser, const char *dbfile)
+{
+    std::ifstream is(dbfile);
+    bool result = false;
+
+    if (!is) {
+        std::cerr << "fatal: unable to open " << dbfile << std::endl;
+        return false;
+    }
+    result = parser.parse(is);
+    return result;
+}
+
+bool write_note_database(cnote_parser &parser, const char *dbfile)
+{
+    std::ofstream os(dbfile);
+
+    if (!os) {
+        std::cerr << "fatal: unable to open " << dbfile << std::endl;
+        return false;
+    }
+
+    parser.dump(os);
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     opt::options_description desc("Usage: ");
@@ -95,7 +121,7 @@ int main(int argc, char *argv[])
 
     parse_cnote_options(vm);
     cnote_creator cc;
-    cc.create_note(std::cin);
+    cc.create_note();
     
     return 0;
 }
