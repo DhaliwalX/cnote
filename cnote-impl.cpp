@@ -70,17 +70,14 @@ std::string cnote::to_json() const
     return j.dump();
 }
 
-bool cnote_parser::set_parse_options(
-        const boost::program_options::variables_map &v)
+bool cnote_parser::parse(std::istream &is)
 {
-    vm = v;
-    return true;
-}
-
-bool cnote_parser::parse(std::istringstream &is)
-{
-    is >> json_parser;
-
+    try {
+        is >> json_parser;
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    }
     // since our notes are stored in json array
     if (json_parser.is_array())
         return true;
@@ -211,7 +208,7 @@ bool launch_editor(const char *editor, const char *filename)
     return true;
 }
 
-std::shared_ptr<cnote> cnote_creator::create_note(std::istream &i)
+std::shared_ptr<cnote> cnote_creator::create_note()
 {
     // so let's see how would I take the input
     // I'll just open their favorite text editor like vim or emacs to write
