@@ -101,6 +101,10 @@ public:
 
     // print the output of the parser to the output stream
     void dump(std::ostream &os) const;
+
+    std::shared_ptr<cnote> find_note(const std::string &s) const;
+    void save_note(std::shared_ptr<cnote> note);
+    void list_note(std::ostream &os) const;
 private:
     json json_parser;
 };
@@ -115,7 +119,7 @@ public:
     bool create_options(const boost::program_options::variables_map &vm);
 
     bool parse_note_file(std::istream &is, std::shared_ptr<cnote> &p); 
-    std::shared_ptr<cnote> create_note(std::istream &is);
+    std::shared_ptr<cnote> create_note();
     std::shared_ptr<cnote> create_node(std::string &str); 
 private:
     boost::program_options::variables_map vm;

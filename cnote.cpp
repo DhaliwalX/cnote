@@ -46,7 +46,13 @@ void set_options(opt::options_description &desc,
         ("author,a", opt::value<std::string>()->default_value(get_user_name()),
                 "author of the note")
         ("flags,f", opt::value<cnote_flag__>()->default_value(cnote_flag::Normal),
-                "flags for the note");
+                "flags for the note")
+        ("search,s", opt::value<std::string>(), "title of the note to search")
+        ("db-file,d", opt::value<std::string>()
+                ->default_value(std::string("/home/") + get_user_name() + "/.cndb"), 
+                "name of file in which database will be stored")
+        ("debug", opt::value<bool>()->default_value(false), "print the debug output")
+        ("list,l", "list the notes");
     po.add("notes-file", -1);
 }
 
@@ -74,6 +80,8 @@ void parse_cnote_options(opt::variables_map &vm)
     }
     opts.author_ = vm["author"].as<std::string>();
     opts.flags_ = vm["flags"].as<cnote_flag__>();
+    opts.notes_db_ = vm["db-file"].as<std::string>();
+    opts.debug_ = vm["debug"].as<bool>();
 }
 
 bool parse_note_database(cnote_parser &parser, const char *dbfile)
@@ -99,7 +107,27 @@ bool write_note_database(cnote_parser &parser, const char *dbfile)
     }
 
     parser.dump(os);
+    if (opts.debug_) {
+        parser.dump(std::cout);
+    }
     return true;
+}
+
+bool print_note(cnote_parser &parser, std::string title)
+{
+    std::shared_ptr<cnote> note = parser.find_note(title);
+
+    if (note) {
+        // we found the note
+        if (opts.debug_)
+            std::cout << "Found note: " << title << std::endl;
+    }
+    return true;
+}
+
+void list_notes(cnote_parser &parser)
+{
+    parser.list_note(std::cout);    
 }
 
 int main(int argc, char *argv[])
@@ -107,22 +135,37 @@ int main(int argc, char *argv[])
     opt::options_description desc("Usage: ");
     opt::positional_options_description po;
     opt::variables_map vm;
-
+    std::shared_ptr<cnote> cn;
     set_options(desc, po);
     if (!parse_command_line_options(desc, po, argc, argv, vm)) {
         std::cout << "See -h for usage." << std::endl;
         return -1;
     }
+    parse_cnote_options(vm);
+    cnote_parser parser;
+    if (!parse_note_database(parser, opts.notes_db_.c_str()))
+        return -1;
     
     if (vm.count("help")) {
         std::cout << desc << std::endl;
         return 0;
+    } else if (vm.count("search")) {
+        if (opts.debug_)
+            std::cout << "Searching for: " << vm["search"].as<std::string>() << std::endl;
+        print_note(parser, vm["search"].as<std::string>());
+        return 0;
+    } else if (vm.count("list")) {
+        list_notes(parser);
+        return 0;
     }
 
-    parse_cnote_options(vm);
     cnote_creator cc;
-    cc.create_note();
-    
+    cn = cc.create_note();
+
+    if (cn) {
+        parser.save_note(cn);
+        write_note_database(parser, opts.notes_db_.c_str());
+    }
     return 0;
 }
 

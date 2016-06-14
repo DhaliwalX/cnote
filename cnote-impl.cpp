@@ -59,15 +59,18 @@ std::string cnote::to_json() const
 {
     json j = {};
 
-    j["title"] = this->m_title;
-    j["author"] = this->m_author;
-    j["note"] = this->m_note;
-    j["tags"] = this->m_tags;
-    j["flags"] = this->m_flags;
+    std::string tags = "";
 
-    std::cout << j.dump(4);
+    for (const auto &tag : this->m_tags) {
+        tags += tag;
+    }
+    j["title"] = json::string_t(this->m_title);
+    j["author"] = json::string_t(this->m_author);
+    j["note"] = json::string_t(this->m_note);
+    j["tags"] = json::string_t(tags);
+    j["flags"] = json::number_integer_t(this->m_flags);
 
-    return j.dump();
+    return j.dump(4);
 }
 
 bool cnote_parser::parse(std::istream &is)
@@ -79,9 +82,41 @@ bool cnote_parser::parse(std::istream &is)
         return false;
     }
     // since our notes are stored in json array
-    if (json_parser.is_array())
+    if (json_parser.is_array()) {
+        if (opts.debug_)
+            std::cout << opts.notes_db_ << " [OK]" << std::endl;
         return true;
+    }
     return false;
+}
+
+std::shared_ptr<cnote> cnote_parser::find_note(const std::string &title) const
+{
+    std::shared_ptr<cnote> note;
+    std::string t;
+
+    for (const auto &element : json_parser) {
+        t = element["title"];
+        if (t == title) {
+            note = std::make_shared<cnote>();
+            note->title() = t;
+            note->author() = element["author"];
+            for (const auto &tag : element["tags"]) {
+                note->mark_tag(tag.get<std::string>());
+            }
+            note->note() = element["note"];
+        }
+    }
+
+    return note;
+}
+
+void cnote_parser::list_note(std::ostream &os) const
+{
+    size_t i = 0;
+    for (const auto &element : json_parser) {
+        os << "[" << i << "] " << element["title"] << std::endl;
+    }
 }
 
 std::string get_flag_string(cnote_flag flag, int i)
@@ -130,6 +165,20 @@ void cnote_parser::dump(std::ostream &os) const
     os << json_parser.dump(2) << std::endl;
 }
 
+void cnote_parser::save_note(std::shared_ptr<cnote> note)
+{
+    try {
+        json jnote { note->to_json() };
+        if (opts.debug_) {
+            std::cout << "jnote: " << jnote.dump();
+        }
+        json_parser.push_back(jnote);
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        exit(2);
+    }
+}
+
 bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
 {
     std::string note;
@@ -141,7 +190,6 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
         is.read(buffer, 1024);
         note += buffer;
     }
-    std::cout << note << std::endl;
     parser.set_cache(note);
 
     std::string title = parser.parse_title();
@@ -157,8 +205,9 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
     for (const auto &i : tags) {
         p->mark_tag(i);
     }
-
-    std::cout << (*p).to_json() << std::endl;
+    if (opts.debug_) {
+        std::cout << (*p).to_json() << std::endl;
+    }
     return true;
 }
 
