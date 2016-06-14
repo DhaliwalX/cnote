@@ -27,6 +27,7 @@ struct cnote_options {
     std::string author_;
     std::string title_;
     std::string notes_file_;
+    std::string notes_db_;
     bool debug_;
 };
 
@@ -96,15 +97,12 @@ public:
     cnote_parser(const cnote_parser &) = default;
     cnote_parser& operator=(const cnote_parser &) = default;
     
-    bool set_parse_options(const boost::program_options::variables_map &v);
-    bool parse(std::istringstream &stream);
+    bool parse(std::istream &stream);
 
     // print the output of the parser to the output stream
     void dump(std::ostream &os) const;
 private:
     json json_parser;
-    std::vector<cnote> note_store;
-    boost::program_options::variables_map vm;
 };
 
 class cnote_creator {
