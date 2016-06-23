@@ -21,7 +21,7 @@ std::string default_notes_filename()
                 << std::endl;
         exit(1);
     }
-    return ret +"/home/" + user + "/.cnote";
+    return ret + ".cnote";
 }
 
 std::string get_user_name()
@@ -151,7 +151,8 @@ int main(int argc, char *argv[])
         return 0;
     } else if (vm.count("search")) {
         if (opts.debug_)
-            std::cout << "Searching for: " << vm["search"].as<std::string>() << std::endl;
+            std::cout << "Searching for: " << vm["search"].as<std::string>()
+                    << std::endl;
         print_note(parser, vm["search"].as<std::string>());
         return 0;
     } else if (vm.count("list")) {
