@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (cnote)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wall -Werror")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++1y -Wall -Werror")
 
 # search for boost library and program_options is required
 find_package (Boost COMPONENTS program_options REQUIRED)
