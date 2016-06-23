@@ -187,8 +187,12 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
 
     // read the whole file
     while (is) {
-        is.read(buffer, 1024);
-        note += buffer;
+        is.read(buffer, 1023);
+        auto count = is.gcount();
+        if (count < 1023) {
+            note.append(buffer, count);
+        }
+        note.append(buffer, count);
     }
     parser.set_cache(note);
 
@@ -220,6 +224,10 @@ public:
 
     void push_back(const char *arg)
     {
+        if (arg == nullptr) {
+            argv.push_back(nullptr);
+            return;
+        }
         char *temp = new char[strlen(arg)];
         std::strcpy(temp, arg);
         argv.push_back(temp);
@@ -236,23 +244,22 @@ private:
 
 bool launch_editor(const char *editor, const char *filename)
 {
-    pid_t child_pid;
     int editor_status = 0;
-    child_pid = fork();
     arguments args;
     args.push_back(editor);
     args.push_back(filename);
+    args.push_back(nullptr);
 
     char **arg_list = args.data(); 
-    if (child_pid != 0)
-        return child_pid;
-    else {
-        execvp(editor, arg_list);
-        wait(&editor_status);
-        if (!WIFEXITED(editor_status)) {
-            std::cout << editor << " exited abnormally, aborting." << std::endl;
-            return false;
-        }
+    if (execvp(editor, arg_list) == -1)
+        throw std::runtime_error((std::string() + "unable to execv " 
+                    + editor + ": " + strerror(errno)).c_str());
+    if (wait(&editor_status) == -1)
+        throw std::runtime_error((std::string() + "unable to wait: "
+                    + strerror(errno)).c_str());
+    if (!WIFEXITED(editor_status)) {
+        std::cout << editor << " exited abnormally, aborting." << std::endl;
+        return false;
     }
     return true;
 }
@@ -277,6 +284,7 @@ std::shared_ptr<cnote> cnote_creator::create_note()
     //
     // get the user's favourite editor, if not specified then default will
     // be mine's favourite that's `vim`.
+    
     char *editor = getenv("EDITOR");
     std::string e = "";
     if (!editor) {
@@ -284,6 +292,8 @@ std::shared_ptr<cnote> cnote_creator::create_note()
     } else {
         e = editor;
     }
+    std::ofstream os { opts.notes_file_.c_str(), std::ios::trunc };
+    os.close();
     system((e + " " + opts.notes_file_).c_str());
     std::ifstream is(opts.notes_file_);
     std::shared_ptr<cnote> note_ptr = std::make_shared<cnote>();
