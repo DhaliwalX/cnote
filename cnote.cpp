@@ -84,6 +84,18 @@ void parse_cnote_options(opt::variables_map &vm)
     opts.debug_ = vm["debug"].as<bool>();
 }
 
+void create_database_file(const char *dbfile)
+{
+    std::ofstream os { dbfile };
+
+    if (!os) {
+        std::cerr << "fatal: unable to create " << dbfile << std::endl;
+        exit(-1);
+    }
+    os << "[]" << std::endl;
+    os.close();
+}
+
 bool parse_note_database(cnote_parser &parser, const char *dbfile)
 {
     std::ifstream is(dbfile);
@@ -91,9 +103,11 @@ bool parse_note_database(cnote_parser &parser, const char *dbfile)
 
     if (!is) {
         std::cerr << "fatal: unable to open " << dbfile << std::endl;
-        return false;
+        std::cout << "creating one..." << std::endl;
+        create_database_file(dbfile);
     }
     result = parser.parse(is);
+    is.close();
     return result;
 }
 
@@ -110,6 +124,7 @@ bool write_note_database(cnote_parser &parser, const char *dbfile)
     if (opts.debug_) {
         parser.dump(std::cout);
     }
+    os.close();
     return true;
 }
 
