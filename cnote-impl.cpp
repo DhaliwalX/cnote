@@ -59,11 +59,14 @@ std::string cnote::to_json() const
 {
     json j = {};
 
-    std::string tags = "";
+    std::string tags = "[ ";
 
     for (const auto &tag : this->m_tags) {
-        tags += tag;
+        tags += tag + ",";
     }
+    if (m_tags.size())
+        tags.pop_back();
+    tags += "]";
     j["title"] = json::string_t(this->m_title);
     j["author"] = json::string_t(this->m_author);
     j["note"] = json::string_t(this->m_note);
