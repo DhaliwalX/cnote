@@ -162,15 +162,17 @@ std::ostream &operator<<(std::ostream &os, cnote &cn)
 
 void cnote_parser::dump(std::ostream &os) const
 {
-    os << json_parser.dump(2) << std::endl;
+    os << json_parser.dump(4) << std::endl;
 }
 
 void cnote_parser::save_note(std::shared_ptr<cnote> note)
 {
     try {
-        json jnote { note->to_json() };
+        std::istringstream is {  note->to_json() };
+        json jnote;
+        is >> jnote;
         if (opts.debug_) {
-            std::cout << "jnote: " << jnote.dump();
+            std::cout << "jnote: " << jnote.dump(4);
         }
         json_parser.push_back(jnote);
     } catch (std::exception &e) {
@@ -189,9 +191,6 @@ bool cnote_creator::parse_note_file(std::istream &is, std::shared_ptr<cnote> &p)
     while (is) {
         is.read(buffer, 1023);
         auto count = is.gcount();
-        if (count < 1023) {
-            note.append(buffer, count);
-        }
         note.append(buffer, count);
     }
     parser.set_cache(note);
