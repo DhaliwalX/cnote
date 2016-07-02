@@ -19,7 +19,10 @@ std::vector<std::string> markdown_parser::parse_tags()
     if (std::distance(start, end) == 0)
         return {};
     for (auto it = start; it != end; it++) {
-        tag = (*it).str();
+        auto str = it->str();
+        str = std::regex_replace(str, std::regex{ R"([\*]*)" }, "");
+        str = std::regex_replace(str, std::regex{ R"([_]*)" }, "");
+        tag = str;
         ret.push_back(tag);
     }
 
@@ -56,6 +59,8 @@ std::string markdown_parser::parse_title()
         return "";
     }
 
-    return (*start).str();
+    std::string str = (*start).str();
+    str = std::regex_replace(str, std::regex{ R"([ ]*#[ ]*)" }, "");
+    return str;
 }
 
